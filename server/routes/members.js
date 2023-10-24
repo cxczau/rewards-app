@@ -24,9 +24,12 @@ router.get('/:id', (req, res) => {
 });
 
 router.put('/', (req, res) => {
+  console.log(req)
   db.Member.create({
     firstName: req.body.firstName,
     lastName: req.body.lastName,
+    birthday: req.body.birthday,
+    email: req.body.email,
     id: req.body.id,
   })
     .then((member) => {
