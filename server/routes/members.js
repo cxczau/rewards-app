@@ -1,17 +1,33 @@
 const express = require('express');
+const { Op } = require('sequelize');
 
 const router = express.Router();
 const db = require('../database');
 
-router.get('/', ({ deletedAt, ...query }, res) => {
+router.get('/', (req, res) => {
+  const { deleted, ...query } = req.query;
   // Gives ability to search for deleted members
-  const deletedQuery = deletedAt === 'true' ? { deletedAt: { $ne: null } } : { deletedAt: null };
+  const deletedQuery = deleted ? { deletedAt: { [Op.ne]: null } } : { deletedAt: null };
 
   db.Member.findAll({
     where: {
       ...deletedQuery,
       ...query,
     },
+    include: [{
+      model: db.MemberReward,
+      required: false,
+      where: {
+        deletedAt: null,
+      },
+      include: [{
+        model: db.Reward,
+        required: false,
+        where: {
+          deletedAt: null,
+        },
+      }],
+    }],
   })
     .then((member) => {
       res.status(200).send(JSON.stringify(member));
@@ -178,8 +194,18 @@ router.delete('/:id', (req, res) => {
 });
 
 router.post('/:id/rewards/:rewardId/delete', async ({ params }, res) => {
-  const foundMember = await db.Member.findByPk(params.id);
-  const foundReward = await db.Reward.findByPk(params.rewardId);
+  const foundMember = await db.Member.findOne({
+    where: {
+      id: params.id,
+      deletedAt: null,
+    },
+  });
+  const foundReward = await db.Reward.findOne({
+    where: {
+      id: params.rewardId,
+      deletedAt: null,
+    },
+  });
 
   if (foundMember && foundReward) {
     db.MemberReward.update({
