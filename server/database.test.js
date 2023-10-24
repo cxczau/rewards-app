@@ -12,7 +12,7 @@ describe('Member', () => {
     birthday: '1990-01-01',
   };
 
-  test('create member', async () => {
+  test('should create member', async () => {
     expect.assertions(1);
     const member = await db.Member.create({
       id: 1,
@@ -21,14 +21,32 @@ describe('Member', () => {
     expect(member.id).toEqual(1);
   });
 
-  test('get member', async () => {
+  test('should not create member with same email', async () => {
+    expect.assertions(1);
+    try {
+      await db.Member.create({
+        id: 2,
+        ...MEMBER_MOCK,
+      });
+    } catch (err) {
+      expect(err.errors[0].message).toEqual('email must be unique');
+    }
+  });
+
+  test('should get member', async () => {
     expect.assertions(2);
     const member = await db.Member.findByPk(1);
     expect(member.firstName).toEqual(MEMBER_MOCK.firstName);
     expect(member.lastName).toEqual(MEMBER_MOCK.lastName);
   });
 
-  test('delete member', async () => {
+  test('should fetch all members', async () => {
+    expect.assertions(1);
+    const members = await db.Member.findAll();
+    expect(members.length).toEqual(1);
+  });
+
+  test('should delete member', async () => {
     expect.assertions(1);
     await db.Member.update(
       { deletedAt: new Date() },
@@ -36,6 +54,16 @@ describe('Member', () => {
     );
     const member = await db.Member.findByPk(1);
     expect(member.deletedAt).not.toEqual(null);
+  });
+
+  test('should undelete member', async () => {
+    expect.assertions(1);
+    await db.Member.update(
+      { deletedAt: null },
+      { where: { id: 1 } },
+    );
+    const member = await db.Member.findByPk(1);
+    expect(member.deletedAt).toEqual(null);
   });
 });
 
@@ -46,7 +74,7 @@ describe('Reward', () => {
     cost: 100,
   };
 
-  test('create reward', async () => {
+  test('should create reward', async () => {
     expect.assertions(1);
     const reward = await db.Reward.create({
       id: 1,
@@ -55,22 +83,43 @@ describe('Reward', () => {
     expect(reward.id).toEqual(1);
   });
 
-  test('get reward', async () => {
+  test('should not create reward with same name', async () => {
+    expect.assertions(1);
+    try {
+      await db.Reward.create({
+        id: 2,
+        ...REWARD_MOCK,
+      });
+    } catch (err) {
+      expect(err.errors[0].message).toEqual('name must be unique');
+    }
+  });
+
+  test('should get reward', async () => {
     expect.assertions(2);
     const reward = await db.Reward.findByPk(1);
     expect(reward.firstName).toEqual(REWARD_MOCK.firstName);
     expect(reward.lastName).toEqual(REWARD_MOCK.lastName);
   });
 
-  test('delete reward', async () => {
+  test('should delete reward', async () => {
     expect.assertions(1);
-    await db.Reward.destroy({
-      where: {
-        id: 1,
-      },
-    });
+    await db.Reward.update(
+      { deletedAt: new Date() },
+      { where: { id: 1 } },
+    );
     const reward = await db.Reward.findByPk(1);
-    expect(reward).toBeNull();
+    expect(reward.deletedAt).not.toEqual(null);
+  });
+
+  test('should undelete reward', async () => {
+    expect.assertions(1);
+    await db.Reward.update(
+      { deletedAt: null },
+      { where: { id: 1 } },
+    );
+    const reward = await db.Reward.findByPk(1);
+    expect(reward.deletedAt).toEqual(null);
   });
 });
 
