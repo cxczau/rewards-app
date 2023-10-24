@@ -27,10 +27,18 @@ router.get('/all', (req, res) => {
       deletedAt: null,
     },
     include: [{
-      model: db.Reward,
+      model: db.MemberReward,
+      required: false,
       where: {
         deletedAt: null,
       },
+      include: [{
+        model: db.Reward,
+        required: false,
+        where: {
+          deletedAt: null,
+        },
+      }],
     }],
   })
     .then((members) => {
@@ -176,6 +184,7 @@ router.post('/:id/rewards/:rewardId/delete', async ({ params }, res) => {
   if (foundMember && foundReward) {
     db.MemberReward.update({
       deletedAt: new Date(),
+    }, {
       where: {
         memberId: foundMember.id,
         rewardId: foundReward.id,

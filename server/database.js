@@ -61,8 +61,10 @@ const MemberReward = sequelize.define('memberReward', {
   },
 });
 
-Member.belongsToMany(Reward, { through: MemberReward });
-Reward.belongsToMany(Member, { through: MemberReward });
+Member.hasMany(MemberReward);
+Reward.hasMany(MemberReward);
+MemberReward.belongsTo(Member);
+MemberReward.belongsTo(Reward);
 
 module.exports = {
   sequelize,
