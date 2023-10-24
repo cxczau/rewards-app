@@ -3,6 +3,20 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 
+router.get('/', (req, res) => {
+  db.Member.findAll({
+    where: {
+      ...req.query,
+    },
+  })
+    .then((member) => {
+      res.status(200).send(JSON.stringify(member));
+    })
+    .catch((err) => {
+      res.status(500).send(JSON.stringify(err));
+    });
+});
+
 router.get('/all', (req, res) => {
   db.Member.findAll()
     .then((members) => {
@@ -24,7 +38,6 @@ router.get('/:id', (req, res) => {
 });
 
 router.put('/', (req, res) => {
-  console.log(req)
   db.Member.create({
     firstName: req.body.firstName,
     lastName: req.body.lastName,
