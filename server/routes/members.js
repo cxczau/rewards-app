@@ -4,30 +4,37 @@ const { Op } = require('sequelize');
 const router = express.Router();
 const db = require('../database');
 
+const ALLOWED_ATTRIBUTES = ['firstName', 'lastName', 'birthday', 'email', 'id'];
+
 router.get('/', (req, res) => {
-  const { deleted, ...query } = req.query;
+  const { deleted, view, ...query } = req.query;
   // Gives ability to search for deleted Members
   const deletedQuery = deleted ? { deletedAt: { [Op.ne]: null } } : { deletedAt: null };
+
+  // Only return the attributes that were requested
+  const attributes = ALLOWED_ATTRIBUTES.filter((attribute) => view.includes(attribute));
+  const include = view.includes('rewards') ? [{
+    model: db.MemberReward,
+    required: false,
+    where: {
+      deletedAt: null,
+    },
+    include: [{
+      model: db.Reward,
+      required: false,
+      where: {
+        deletedAt: null,
+      },
+    }],
+  }] : [];
 
   db.Member.findAll({
     where: {
       ...deletedQuery,
       ...query,
     },
-    include: [{
-      model: db.MemberReward,
-      required: false,
-      where: {
-        deletedAt: null,
-      },
-      include: [{
-        model: db.Reward,
-        required: false,
-        where: {
-          deletedAt: null,
-        },
-      }],
-    }],
+    attributes,
+    include,
   })
     .then((member) => {
       res.status(200).send(JSON.stringify(member));
