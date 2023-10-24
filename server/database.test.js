@@ -30,13 +30,12 @@ describe('Member', () => {
 
   test('delete member', async () => {
     expect.assertions(1);
-    await db.Member.destroy({
-      where: {
-        id: 1,
-      },
-    });
+    await db.Member.update(
+      { deletedAt: new Date() },
+      { where: { id: 1 } },
+    );
     const member = await db.Member.findByPk(1);
-    expect(member).toBeNull();
+    expect(member.deletedAt).not.toEqual(null);
   });
 });
 
