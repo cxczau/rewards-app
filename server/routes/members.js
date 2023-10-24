@@ -4,7 +4,7 @@ const { Op } = require('sequelize');
 const router = express.Router();
 const db = require('../database');
 
-const VIEWABLE_ATTRIBUTES = ['firstName', 'lastName', 'birthday', 'email', 'id'];
+const VIEWABLE_ATTRIBUTES = ['firstName', 'lastName', 'birthday', 'email', 'id', 'deletedAt'];
 
 router.get('/', (req, res) => {
   const { deleted, view = VIEWABLE_ATTRIBUTES, ...query } = req.query;
