@@ -40,6 +40,41 @@ describe('Member', () => {
   });
 });
 
+describe('Reward', () => {
+  const REWARD_MOCK = {
+    name: 'Test Reward',
+    description: 'Test Reward Description',
+    cost: 100,
+  };
+
+  test('create reward', async () => {
+    expect.assertions(1);
+    const reward = await db.Reward.create({
+      id: 1,
+      ...REWARD_MOCK,
+    });
+    expect(reward.id).toEqual(1);
+  });
+
+  test('get reward', async () => {
+    expect.assertions(2);
+    const reward = await db.Reward.findByPk(1);
+    expect(reward.firstName).toEqual(REWARD_MOCK.firstName);
+    expect(reward.lastName).toEqual(REWARD_MOCK.lastName);
+  });
+
+  test('delete reward', async () => {
+    expect.assertions(1);
+    await db.Reward.destroy({
+      where: {
+        id: 1,
+      },
+    });
+    const reward = await db.Reward.findByPk(1);
+    expect(reward).toBeNull();
+  });
+});
+
 afterAll(async () => {
   await db.sequelize.close();
 });
