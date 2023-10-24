@@ -3,10 +3,14 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 
-router.get('/', (req, res) => {
+router.get('/', ({ deletedAt, ...query }, res) => {
+  // Gives ability to search for deleted members
+  const deletedQuery = deletedAt === 'true' ? { deletedAt: { $ne: null } } : { deletedAt: null };
+
   db.Member.findAll({
     where: {
-      ...req.query,
+      ...deletedQuery,
+      ...query,
     },
   })
     .then((member) => {
@@ -18,7 +22,17 @@ router.get('/', (req, res) => {
 });
 
 router.get('/all', (req, res) => {
-  db.Member.findAll()
+  db.Member.findAll({
+    where: {
+      deletedAt: null,
+    },
+    include: [{
+      model: db.Reward,
+      where: {
+        deletedAt: null,
+      },
+    }],
+  })
     .then((members) => {
       res.status(200).send(JSON.stringify(members));
     })
@@ -62,6 +76,7 @@ router.post('/:id', async ({ params, body }, res) => {
       ...body.lastName && { lastName: body.lastName },
       ...body.birthday && { birthday: body.birthday },
       ...body.email && { email: body.email },
+      ...body.undelete && { deletedAt: null },
     })
       .then((member) => {
         res.status(200).send(JSON.stringify(member));
@@ -74,10 +89,76 @@ router.post('/:id', async ({ params, body }, res) => {
   }
 });
 
+router.get('/:id/rewards', async ({ params }, res) => {
+  const foundMember = await db.Member.findOne({
+    where: {
+      id: params.id,
+      deletedAt: null,
+    },
+  });
+
+  if (foundMember) {
+    db.MemberReward.findAll({
+      where: {
+        memberId: foundMember.id,
+        deletedAt: null,
+      },
+      include: [{
+        model: db.Reward,
+        where: {
+          deletedAt: null,
+        },
+      }],
+    })
+      .then((rewards) => {
+        res.status(200).send(JSON.stringify(rewards));
+      })
+      .catch((err) => {
+        res.status(400).send(JSON.stringify(err));
+      });
+  }
+});
+
+router.post('/:id/rewards/:rewardId', async ({ params }, res) => {
+  const foundMember = await db.Member.findOne({
+    where: {
+      id: params.id,
+      deletedAt: null,
+    },
+  });
+  const foundReward = await db.Reward.findOne({
+    where: {
+      id: params.rewardId,
+      deletedAt: null,
+    },
+  });
+
+  if (foundMember && foundReward) {
+    db.MemberReward.findOrCreate({
+      where: {
+        memberId: foundMember.id,
+        rewardId: foundReward.id,
+        deletedAt: null,
+      },
+    })
+      .then((member) => {
+        res.status(200).send(JSON.stringify(member));
+      })
+      .catch((err) => {
+        res.status(400).send(JSON.stringify(err));
+      });
+  } else {
+    res.status(400).send(JSON.stringify({ error: 'Member or Reward not found' }));
+  }
+});
+
 router.delete('/:id', (req, res) => {
-  db.Member.destroy({
+  db.Member.update({
+    deletedAt: new Date(),
+  }, {
     where: {
       id: req.params.id,
+      deletedAt: null,
     },
   })
     .then(() => {
@@ -86,6 +167,29 @@ router.delete('/:id', (req, res) => {
     .catch((err) => {
       res.status(400).send(JSON.stringify(err));
     });
+});
+
+router.post('/:id/rewards/:rewardId/delete', async ({ params }, res) => {
+  const foundMember = await db.Member.findByPk(params.id);
+  const foundReward = await db.Reward.findByPk(params.rewardId);
+
+  if (foundMember && foundReward) {
+    db.MemberReward.update({
+      deletedAt: new Date(),
+      where: {
+        memberId: foundMember.id,
+        rewardId: foundReward.id,
+      },
+    })
+      .then((member) => {
+        res.status(200).send(JSON.stringify(member));
+      })
+      .catch((err) => {
+        res.status(400).send(JSON.stringify(err));
+      });
+  } else {
+    res.status(400).send(JSON.stringify({ error: 'Member or Reward not found' }));
+  }
 });
 
 module.exports = router;

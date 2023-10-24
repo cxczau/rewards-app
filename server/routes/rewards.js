@@ -6,6 +6,7 @@ const db = require('../database');
 router.get('/', (req, res) => {
   db.Reward.findAll({
     where: {
+      deletedAt: null,
       ...req.query,
     },
   })
@@ -18,7 +19,11 @@ router.get('/', (req, res) => {
 });
 
 router.get('/all', (req, res) => {
-  db.Reward.findAll()
+  db.Reward.findAll({
+    where: {
+      deletedAt: null,
+    },
+  })
     .then((rewards) => {
       res.status(200).send(JSON.stringify(rewards));
     })
@@ -52,7 +57,12 @@ router.put('/', (req, res) => {
 });
 
 router.post('/:id', async ({ params, body }, res) => {
-  const found = await db.Reward.findByPk(params.id);
+  const found = await db.Reward.findOne({
+    where: {
+      id: params.id,
+      deletedAt: null,
+    },
+  });
 
   if (found) {
     found.update({
@@ -72,9 +82,12 @@ router.post('/:id', async ({ params, body }, res) => {
 });
 
 router.delete('/:id', (req, res) => {
-  db.Reward.destroy({
+  db.Reward.update({
+    deletedAt: new Date(),
+  }, {
     where: {
       id: req.params.id,
+      deletedAt: null,
     },
   })
     .then(() => {
