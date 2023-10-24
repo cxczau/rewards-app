@@ -15,7 +15,7 @@
 - get Reward by name or description
 - update Reward
 - delete Reward
-- dependent destroy all associated MemberRewards
+- dependent destroy all associated MemberRewards (not required; filtered out)
 
 - case insensitive search
 - landing page
@@ -24,5 +24,5 @@
 
 ## Assumptions
 - Each Member's email is unique
-- Member can only have one of each Reward
+- Member can only have one of each Reward that is active/not-deleted
 - Reward's name is unique
