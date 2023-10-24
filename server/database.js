@@ -14,7 +14,7 @@ const sequelize = new Sequelize(
   },
 );
 
-const Member = sequelize.define('Member', {
+const Member = sequelize.define('member', {
   firstName: {
     type: Sequelize.STRING,
     allowNull: false,
@@ -32,9 +32,12 @@ const Member = sequelize.define('Member', {
     allowNull: false,
     unique: true,
   },
+  deletedAt: {
+    type: Sequelize.DATE,
+  },
 });
 
-const Reward = sequelize.define('Reward', {
+const Reward = sequelize.define('reward', {
   name: {
     type: Sequelize.STRING,
     allowNull: false,
@@ -47,24 +50,19 @@ const Reward = sequelize.define('Reward', {
     type: Sequelize.INTEGER,
     min: 0,
   },
+  deletedAt: {
+    type: Sequelize.DATE,
+  },
 });
 
-const MemberReward = sequelize.define('MemberReward', {
-  memberId: {
-    type: Sequelize.INTEGER,
-    references: {
-      model: Member,
-      key: 'id',
-    },
-  },
-  rewardId: {
-    type: Sequelize.INTEGER,
-    references: {
-      model: Reward,
-      key: 'id',
-    },
+const MemberReward = sequelize.define('memberReward', {
+  deletedAt: {
+    type: Sequelize.DATE,
   },
 });
+
+Member.belongsToMany(Reward, { through: MemberReward });
+Reward.belongsToMany(Member, { through: MemberReward });
 
 module.exports = {
   sequelize,
