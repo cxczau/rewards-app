@@ -6,7 +6,7 @@ const db = require('../database');
 
 router.get('/', (req, res) => {
   const { deleted, ...query } = req.query;
-  // Gives ability to search for deleted members
+  // Gives ability to search for deleted Members
   const deletedQuery = deleted ? { deletedAt: { [Op.ne]: null } } : { deletedAt: null };
 
   db.Member.findAll({
@@ -186,7 +186,7 @@ router.delete('/:id', (req, res) => {
     },
   })
     .then(() => {
-      res.status(200).send();
+      res.status(200).send({ success: true });
     })
     .catch((err) => {
       res.status(400).send(JSON.stringify(err));

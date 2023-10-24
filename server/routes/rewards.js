@@ -1,13 +1,18 @@
 const express = require('express');
+const { Op } = require('sequelize');
 
 const router = express.Router();
 const db = require('../database');
 
 router.get('/', (req, res) => {
+  const { deleted, ...query } = req.query;
+  // Gives ability to search for deleted Rewards
+  const deletedQuery = deleted ? { deletedAt: { [Op.ne]: null } } : { deletedAt: null };
+
   db.Reward.findAll({
     where: {
-      deletedAt: null,
-      ...req.query,
+      ...deletedQuery,
+      ...query,
     },
   })
     .then((reward) => {
@@ -77,7 +82,7 @@ router.post('/:id', async ({ params, body }, res) => {
         res.status(500).send(JSON.stringify(err));
       });
   } else {
-    res.status(500).send(JSON.stringify({ error: 'Member not found' }));
+    res.status(500).send(JSON.stringify({ error: 'Reward not found' }));
   }
 });
 
@@ -91,7 +96,7 @@ router.delete('/:id', (req, res) => {
     },
   })
     .then(() => {
-      res.status(200).send();
+      res.status(200).send({ success: true });
     })
     .catch((err) => {
       res.status(500).send(JSON.stringify(err));
