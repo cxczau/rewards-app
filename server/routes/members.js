@@ -13,7 +13,7 @@ router.get('/', (req, res) => {
       res.status(200).send(JSON.stringify(member));
     })
     .catch((err) => {
-      res.status(500).send(JSON.stringify(err));
+      res.status(400).send(JSON.stringify(err));
     });
 });
 
@@ -23,7 +23,7 @@ router.get('/all', (req, res) => {
       res.status(200).send(JSON.stringify(members));
     })
     .catch((err) => {
-      res.status(500).send(JSON.stringify(err));
+      res.status(400).send(JSON.stringify(err));
     });
 });
 
@@ -33,7 +33,7 @@ router.get('/:id', (req, res) => {
       res.status(200).send(JSON.stringify(member));
     })
     .catch((err) => {
-      res.status(500).send(JSON.stringify(err));
+      res.status(400).send(JSON.stringify(err));
     });
 });
 
@@ -43,14 +43,35 @@ router.put('/', (req, res) => {
     lastName: req.body.lastName,
     birthday: req.body.birthday,
     email: req.body.email,
-    id: req.body.id,
   })
     .then((member) => {
-      res.status(200).send(JSON.stringify(member));
+      res.status(201).send(JSON.stringify(member));
     })
     .catch((err) => {
-      res.status(500).send(JSON.stringify(err));
+      res.status(400).send(JSON.stringify(err));
     });
+});
+
+router.post('/:id', async ({ params, body }, res) => {
+  const found = await db.Member.findByPk(params.id);
+
+  if (found) {
+    // Only update the fields that were actually passed
+    found.update({
+      ...body.firstName && { firstName: body.firstName },
+      ...body.lastName && { lastName: body.lastName },
+      ...body.birthday && { birthday: body.birthday },
+      ...body.email && { email: body.email },
+    })
+      .then((member) => {
+        res.status(200).send(JSON.stringify(member));
+      })
+      .catch((err) => {
+        res.status(400).send(JSON.stringify(err));
+      });
+  } else {
+    res.status(400).send(JSON.stringify({ error: 'Member not found' }));
+  }
 });
 
 router.delete('/:id', (req, res) => {
@@ -63,7 +84,7 @@ router.delete('/:id', (req, res) => {
       res.status(200).send();
     })
     .catch((err) => {
-      res.status(500).send(JSON.stringify(err));
+      res.status(400).send(JSON.stringify(err));
     });
 });
 

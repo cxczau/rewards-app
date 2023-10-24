@@ -42,14 +42,33 @@ router.put('/', (req, res) => {
     name: req.body.name,
     description: req.body.description,
     cost: req.body.cost,
-    id: req.body.id,
   })
     .then((reward) => {
-      res.status(200).send(JSON.stringify(reward));
+      res.status(201).send(JSON.stringify(reward));
     })
     .catch((err) => {
       res.status(500).send(JSON.stringify(err));
     });
+});
+
+router.post('/:id', async ({ params, body }, res) => {
+  const found = await db.Reward.findByPk(params.id);
+
+  if (found) {
+    found.update({
+      ...body.name && { name: body.name },
+      ...body.description && { description: body.description },
+      ...body.cost && { cost: body.cost },
+    })
+      .then((reward) => {
+        res.status(200).send(JSON.stringify(reward));
+      })
+      .catch((err) => {
+        res.status(500).send(JSON.stringify(err));
+      });
+  } else {
+    res.status(500).send(JSON.stringify({ error: 'Member not found' }));
+  }
 });
 
 router.delete('/:id', (req, res) => {

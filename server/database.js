@@ -45,6 +45,7 @@ const Reward = sequelize.define('Reward', {
   },
   cost: {
     type: Sequelize.INTEGER,
+    min: 0,
   },
 });
 
